@@ -1,1 +1,1 @@
-# personal-config
+个人习惯的各种IDE，Shell的配置
