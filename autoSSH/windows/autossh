@@ -1,0 +1,69 @@
+#!/c/Python27/python
+#!coding:utf-8
+#author: khazix
+#github: https://github.com/demonxian3/auto-ssh-login.git
+#environment:
+# - windows
+# - mintty
+# - python27
+
+#require:
+# - pip install pyperclip
+# - pip install PyYAML
+
+#usage:
+# - autossh
+# - autossh myserv <Enter>
+# - autossh myserv up source.zip
+# - autossh myserv dn :/root/test.tgz
+
+import os
+import sys
+import time
+import pyperclip
+
+from yaml import load,FullLoader
+config = "C:\Program Files\Git\etc\server.yaml";
+
+with open(config) as fp:
+    server = load(fp.read(),Loader=FullLoader);
+
+def getValue(name,key):
+    return server[name][key] if key in server[name] else server['default'][key]
+
+def putInfor(name):
+    for key in server[name]:
+        print "{}: {}".format(key, server[name][key]);
+
+if len(sys.argv) <= 1:
+    for name in server:
+        print name;
+    sys.exit();
+
+name = sys.argv[1];
+fn = '' if len(sys.argv)<=3 else sys.argv[3];
+cmd = 'ssh' if len(sys.argv)<=3 else sys.argv[2];
+
+if name in server:
+    host = server[name]['host'];
+    user = getValue(name, 'user');
+    port = getValue(name, 'port');
+    serv = getValue(name, 'serv');
+
+    if serv == 'ssh':
+        pyperclip.copy(server[name]['pass']);
+        if cmd == 'dn':
+            os.system('scp -P {} {}@{}{} .'.format(port,user,host,fn));
+        elif cmd == 'up':
+            os.system('scp -P {} {} {}@{}:/tmp '.format(port, fn,user,host));
+        elif cmd == 'ssh':
+            os.system('ssh -p {} {}@{}'.format(port,user,host));
+        else:
+            print "support action: [ssh|up(upload)|dn(download)]";
+
+    else:
+        pyperclip.copy(server[name]['pass']);
+        putInfor(name);
+        if server[name]['exec']:
+            os.system(server[name]['exec']);
+

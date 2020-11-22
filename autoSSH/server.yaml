@@ -1,0 +1,6 @@
+default:
+  host: localhost
+  user: root
+  pass: 123456
+  port: 22
+  serv: ssh
