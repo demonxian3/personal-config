@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id='app'>
+        <select v-model="startYear">
+            <option value="2019">2019</option>
+            <option value="2020" >2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+        </select>
+        <select v-model='startMonth'>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+        </select>
+        <select v-model="startDay">
+            <option value="1">01</option>
+            <option value="2">02</option>
+            <option value="3">03</option>
+            <option value="4">04</option>
+            <option value="5">05</option>
+            <option value="6">06</option>
+            <option value="7">07</option>
+            <option value="8">08</option>
+            <option value="9">09</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18">18</option>
+            <option value="19">19</option>
+            <option value="20">20</option>
+            <option value="21">21</option>
+            <option value="22">22</option>
+            <option value="23">23</option>
+            <option value="24">24</option>
+            <option value="25">25</option>
+            <option value="26">26</option>
+            <option value="27">27</option>
+            <option value="28">28</option>
+            <option value="29">29</option>
+            <option value="30">30</option>
+            <option value="31">31</option>
+        </select>
+
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+        <select v-model="endYear">
+            <option value="2019">2019</option>
+            <option value="2020" >2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+        </select>
+        <select v-model='endMonth'>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+        </select>
+        <select v-model="endDay">
+            <option value="1">01</option>
+            <option value="2">02</option>
+            <option value="3">03</option>
+            <option value="4">04</option>
+            <option value="5">05</option>
+            <option value="6">06</option>
+            <option value="7">07</option>
+            <option value="8">08</option>
+            <option value="9">09</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18">18</option>
+            <option value="19">19</option>
+            <option value="20">20</option>
+            <option value="21">21</option>
+            <option value="22">22</option>
+            <option value="23">23</option>
+            <option value="24">24</option>
+            <option value="25">25</option>
+            <option value="26">26</option>
+            <option value="27">27</option>
+            <option value="28">28</option>
+            <option value="29">29</option>
+            <option value="30">30</option>
+            <option value="31">31</option>
+        </select>
+
+        <hr>
+        <schdule-table :start-date="startDate" :end-date="endDate" :data="schduleList"></schdule-table>
+    </div>
+
+    <template id='scheduleTable'>
+        <div>
+            <table border style='border-collapse: collapse;'>
+                <tr>
+                    <td v-for="(item,idx) in xAxis" :colspan="item.colspan">{{item.label}}</td>
+                </tr>
+               <tr>
+                    <td v-for="(item,idx) in xDateLines" :key="idx" style="padding: 4px;">{{item}}</td>
+               </tr>
+            </table>
+        </div>
+    </template>
+
+
+    <script src="https://lib.baomitu.com/jquery/1.11.2/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        console.log(document.querySelector('#scheduleTable').outerHTML)
+
+        Vue.component('schdule-table', {
+            template: $('#scheduleTable').html(),
+            props: {
+                startDate: {
+                    type: String,
+                    required: true,
+                },
+
+                endDate: {
+                    type: String,
+                    required: true,
+                },
+
+                data: {
+                    type: Array,
+                    required: true,
+                }
+            },
+            created(){
+                this.render();
+            },
+            data(){
+                return {
+                    xAxis:[],
+                    xDateLines:[],
+                }
+            },
+            watch:{
+                startDate(){this.render();},
+                endDate(){this.render();},
+            },
+            methods: {
+                render(){
+                    if (this.diffDate(this.endDate, this.startDate) <= 0){
+                        alert('结束日期不能小于开始日期，请重新选择');
+                        // throw new Error('结束日期不能小于开始日期');
+                        return;
+                    }
+                    this.calcMonthAxis();
+                    // this.calcDateAxis();
+                    // this.calcContent();
+                },
+                getMonthMaxDay(year, month){
+                    return new Date(year, month, 0).getDate();
+                },
+                calcMonthAxis(){
+                    let range = (start,end,step=1)=>Array.from(
+                        {length:Math.ceil((end-start+1)/step.toFixed(2))},
+                        (e,i)=>start+i*step
+                    );
+
+                    let startDate = new Date(this.startDate);
+                    let endDate = new Date(this.endDate);
+
+                    let y = startDate.getFullYear();
+                    let m = startDate.getMonth() + 1;
+                    
+                    let ey = endDate.getFullYear();
+                    let em = endDate.getMonth() + 1;
+
+                    this.xAxis = [];
+                    this.xDateLines = [];
+
+                    //第一个月数据
+                    let sDate = startDate.getDate();
+                    let eDate = this.getMonthMaxDay(y, m);
+                    this.xAxis.push({
+                        startDate: sDate,
+                        endDate: eDate,
+                        label: `${y}-${m}`,
+                        colspan: eDate - sDate + 1,
+                    });
+
+                    //预防只有一条数据的极端情况
+                    if (m != em || y != ey){
+                        this.xDateLines = this.xDateLines.concat(range(sDate, eDate));
+                    }
+
+                    while (true) {
+                        ++m;
+
+                        if ((y == ey && m > em) || y > ey) {break;}
+
+                        if (m > 12) {
+                            y++;
+                            m = 1;
+                        }
+
+                        let lastDate = this.getMonthMaxDay(y, m);
+                        console.log(lastDate, this.getMonthMaxDay(y, m),{
+                            startDate: 1,
+                            endDate:  lastDate,
+                            label: `${y}-${m}`,
+                            colspan: lastDate,
+                        });
+                        this.xAxis.push({
+                            startDate: 1,
+                            endDate:  lastDate,
+                            label: `${y}-${m}`,
+                            colspan: lastDate,
+                        });
+
+                        if (y != ey || m != em) {
+                            this.xDateLines = this.xDateLines.concat(range(1,lastDate))
+                        }
+                    }
+
+                    //修正最后一个月结束日期相关数据
+                    let lastIdx = this.xAxis.length - 1;
+                    let lastxAxis = this.xAxis[lastIdx];
+                    lastxAxis.endDate = endDate.getDate();
+                    lastxAxis.colspan = endDate.getDate() - lastxAxis.startDate + 1;
+                   
+
+                    this.xDateLines = this.xDateLines.concat(range(lastxAxis.startDate, lastxAxis.endDate));
+                    console.log(this.xDateLines);
+                    console.log(this.xAxis);
+                    
+                },
+                calcDateAxis(){
+                    return ;
+                },
+                calcContent(){
+                    return ;
+                },
+                diffMonth(date1, date2) { 
+                    date1 = date1.split("-");
+                    date2 = date2.split("-");
+                    let year1 = parseInt(date1[0]);
+                    let year2 = parseInt(date2[0]);
+                    let month1 = parseInt(date1[1]);
+                    let month2 = parseInt(date2[1]);
+                    return (year2 - year1) * 12 + (month2 - month1) + 1;
+                },
+                diffDate(date1, date2){
+                    date1 = new Date(date1);
+                    date2 = new Date(date2);
+                    let delta = date1 - date2;
+                    let sign = delta < 0 ? -1 : 1;
+                    return sign * (Math.ceil(Math.abs(delta) / 1000 / 60 / 60 / 24)+1);
+                },
+
+            },
+        });
+
+
+
+        let vm = new Vue({
+            el: '#app',
+            data: {
+                startYear: 2020,
+                endYear: 2020,
+                
+                startMonth: 11,
+                endMonth: 11,
+
+                startDay: 1,
+                endDay: 30,
+                schduleList: [
+                    {startDate: '2020-11-03', endDate: '2020-11-22', developer: 'Khazix', serviceType: 'cfm'},
+                    {startDate: '2020-11-05', endDate: '2020-11-25', developer: 'Jerry', serviceType: '天龙八部'},
+                    {startDate: '2020-11-08', endDate: '2020-11-22', developer: 'Tim', serviceType: '火影忍者'},
+                    {startDate: '2020-11-08', endDate: '2020-11-22', developer: 'Tommy', serviceType: '御剑仙'},
+                    {startDate: '2020-11-03', endDate: '2020-11-22', developer: 'Marry', serviceType: '死神'},
+                    {startDate: '2020-11-03', endDate: '2020-11-22', developer: 'Crack', serviceType: '龙之谷'},
+                    {startDate: '2020-11-03', endDate: '2020-11-22', developer: 'Jacket', serviceType: 'LOL'},
+                ]
+            },
+
+            computed:{
+                startDate(){
+                    return `${this.startYear}-${this.startMonth}-${this.startDay}`
+                },
+                endDate(){
+                    return `${this.endYear}-${this.endMonth}-${this.endDay}`
+                },
+            },
+
+        });
+
+
+      
+            
+
+    </script>
+</body>
+</html>
