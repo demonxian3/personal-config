@@ -1,0 +1,453 @@
+{extends file="index.tpl"}
+
+{block name=specific_plugin_css append}
+    <link rel="stylesheet" type="text/css" href="{#static_dir#}css/RTXSelector.css?version={#version_code#}" />
+{/block}
+
+{block name=custom_css append}
+    <link rel="stylesheet" type="text/css" href="{#static_dir#}css/bs4.css?version={#version_code#}" />
+    <link rel="stylesheet" type="text/css" href="{#static_dir#}css/game/sdkaccess.css?version={#version_code#}" />
+    <link rel="stylesheet" type="text/css" href="{#static_dir#}css/game/daterangepicker.min.css?version={#version_code#}">
+{/block}
+
+{block name=specific_plugin_scripts append}
+{/block}
+
+{block name=custom_js append}
+{*    <script src="{#static_dir#}js/common/game.js?version={#version_code#}"></script>*}
+    <script src="{#static_dir#}js/common/vue.js?version={#version_code#}"></script>
+    <script src="{#static_dir#}js/common/vueCommon.js?version={#version_code#}"></script>
+{*    <script src="{#static_dir#}js/common/vueAlert.js?version={#version_code#}"></script>*}
+    <script src="{#static_dir#}js/common/vuePagination.js?version={#version_code#}"></script>
+    <script src="{#static_dir#}js/game/moment.min.js?version={#version_code#}"></script>
+    <script src="{#static_dir#}js/game/daterangepicker.min.js?version={#version_code#}"></script>
+    <script src="{#static_dir#}js/game/sdkaccess.js?version={#version_code#}"></script>
+{/block}
+
+
+
+{block name=page_content}
+    {literal}
+        <div class='container-fluid' id='app' style="display: none">
+
+            <!-- 接入清单-->
+            <div class="panel panel-default p-1 mt-1 width-85 mx-auto">
+
+                <h5><b>接入清单</b></h5>
+
+                <!-- search -->
+                <div class="col-sm-12 col-xs-12 col-md-12 col-lg-12 form-group" id="search-panel">
+                    <span>
+                        <label class="navbar-container">业务代码</label>
+                        <input type="text" class="text-style input-sm btn-search" style="width: 140px;" v-model='filter.sServiceName'>
+                    </span>
+                    <span>
+                        <label class="navbar-container">申请时间</label>
+                        <input type="text" class="text-style input-sm btn-search" style="width: 250px;"  id="dateRangeSearch" autocomplete="off" >
+                    </span>
+                    <span>
+                        <label class="navbar-container">处理人</label>
+                        <input type="text" class="text-style input-sm btn-search" style="width: 200px;" v-model='filter.sDeveloperRtx' id="sDeveloperRtxSearch">
+                    </span>
+                    <span>
+                        <label class="navbar-container">状态</label>
+                        <select style="width: 80px;" v-model='filter.iAccessStatus'>
+                            <option value="">所有</option>
+                            <option :value="idx" v-for="(attr,idx) in accessStatusMap" :key="idx">{{attr}}</option>
+                        </select>
+                    </span>
+                    <span>
+                        <button class="btn btn-primary btn-sm find_cloudrule text-right" style="margin-left: 10px;" @click='search'>查询</button>
+                    </span>
+                </div>
+
+                <br>
+                <br>
+
+                <!-- table -->
+                <div class='row m-2'>
+                    <table class="table table-bordered text-center">
+                        <thead class='bg-sky '>
+                        <tr>
+                            <th class='text-center'>id</th>
+                            <th class='text-center'>业务名称</th>
+                            <th class='text-center'>业务代码</th>
+                            <th class='text-center'>申请人</th>
+                            <th class='text-center'>申请时间</th>
+                            <th class='text-center'>完成时间</th>
+                            <th class='text-center'>接入状态</th>
+                            <th class='text-center'>后台开发</th>
+                            <th class='text-center'>SDK开发</th>
+                            <th class='text-center'>操作
+
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(item, idx) in sdkAccessList" :key="idx">
+                            <td>{{item.id}}</td>
+                            <td>{{item.sServiceNameCN}}</td>
+                            <td>{{item.sServiceName}}</td>
+                            <td>{{item.sApplicantRtx}}</td>
+                            <td>{{item.dtCreateTime === '0000-00-00 00:00:00' ? '' : item.dtCreateTime}}</td>
+                            <td>{{item.dtUpdateTime === '0000-00-00 00:00:00' || item.iAccessStatus != 4  ? '' : item.dtUpdateTime}}</td>
+                            <td>{{accessStatusMap[item.iAccessStatus]}}</td>
+                            <td>
+                                <button class='btn btn-link' @click='showScheduleModal(item, "backend")'>
+                                  {{item.backend.sDeveloperRtx ? item.backend.sDeveloperRtx :'分配开发'  }}
+                                </button>
+                            </td>
+                            <td>
+                                <button class='btn btn-link' @click='showScheduleModal(item, "sdk")'>
+                                    {{item.sdk.sDeveloperRtx ? item.sdk.sDeveloperRtx :'分配开发'  }}
+                                </button>
+                            </td>
+                            <td class="text-center">
+                                <button class='btn-link cursor-pointer' @click="toApplyPage(item, 'readonly')">查看</button>
+                                <template v-if="item.iAccessStatus == 1">
+                                    <button class='btn-link cursor-pointer' @click="toApplyPage(item, 'write')">变更</button>
+                                </template>
+                                <template v-else-if="item.iAccessStatus == 2">
+                                    <button class='btn-link cursor-pointer' @click="showManageModal(item)">管理</button>
+                                    <!--
+                                    <button class='btn-link cursor-pointer' @click="showManageModal(item, 'SDK')">sdk开发管理</button>
+                                    <button class='btn-link cursor-pointer' @click="showManageModal(item, 'backend')">后台开发管理</button>
+                                    -->
+                                </template>
+                                <template v-if="item.iAccessStatus == 3">
+                                    <button class='btn-link cursor-pointer' @click="changeStatus(item)"> 完结 </button>
+                                </template>
+                                <button class='btn-link cursor-pointer' @click='deleteSDKAccess(item)'>驳回</button>
+                            </td>
+                        </tr>
+                        <tr v-show="!sdkAccessList || sdkAccessList.length == 0" >
+                            <td colspan="10">暂无数据</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <v-pagination :page="1" :perpage="pageData.perPage" :count="pageData.dataCount" @change="getSdkAccessList"></v-pagination>
+                </div>
+            </div>
+
+            <!-- 排期试图-->
+            <div class="panel panel-default p-1 mt-1 width-85 mx-auto" >
+
+                <h5><b>排期视图</b></h5>
+
+                时间:
+                <select v-model="scheduleTable.startYear">
+                    <option value="2019">2019</option>
+                    <option value="2020" >2020</option>
+                    <option value="2021">2021</option>
+                    <option value="2022">2022</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                </select>
+                <select v-model='scheduleTable.startMonth'>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                </select>
+                <select v-model="scheduleTable.startDay">
+                    <option value="1">01</option>
+                    <option value="2">02</option>
+                    <option value="3">03</option>
+                    <option value="4">04</option>
+                    <option value="5">05</option>
+                    <option value="6">06</option>
+                    <option value="7">07</option>
+                    <option value="8">08</option>
+                    <option value="9">09</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                    <option value="24">24</option>
+                    <option value="25">25</option>
+                    <option value="26">26</option>
+                    <option value="27">27</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                    <option value="31">31</option>
+                </select>
+
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                <select v-model="scheduleTable.endYear">
+                    <option value="2019">2019</option>
+                    <option value="2020" >2020</option>
+                    <option value="2021">2021</option>
+                    <option value="2022">2022</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                </select>
+                <select v-model='scheduleTable.endMonth'>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                </select>
+                <select v-model="scheduleTable.endDay">
+                    <option value="1">01</option>
+                    <option value="2">02</option>
+                    <option value="3">03</option>
+                    <option value="4">04</option>
+                    <option value="5">05</option>
+                    <option value="6">06</option>
+                    <option value="7">07</option>
+                    <option value="8">08</option>
+                    <option value="9">09</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                    <option value="24">24</option>
+                    <option value="25">25</option>
+                    <option value="26">26</option>
+                    <option value="27">27</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                    <option value="31">31</option>
+                </select>
+
+                <!--
+                <input type="text" id="dateRangeSearch2" autocomplete="false" />
+
+                <button @click="searchScheduleTable()" class="btn btn-primary btn-sm">查询</button>
+                -->
+
+
+                <schedule-table
+                        :data="scheduleList"
+                        field-developer="developer"
+                        field-service='sServiceName'
+                        class='mt-1'
+                        :start-date="startDate"
+                        :end-date="endDate"
+                ></schedule-table>
+            </div>
+
+            <!-- 排期面板 -->
+            <div class="modal fade" id="scheduleModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">{{ scheduleModalData.item === 'sdk' ? 'SDK开发排期' :'后台开发排期' }}</h4>
+                        </div>
+                        <div class="modal-body">
+                            {{scheduleModalData.sServiceName}} 申请接入潘多拉后台，具体业务信息请<a href=''>点击此处</a>查看
+                            <div v-show='scheduleModalData.item == "backend"'>
+                                <table class="table table-bordered ">
+                                    <tbody>
+                                    <tr>
+                                        <td>业务中文名</td>
+                                        <td>{{scheduleModalData.sServiceNameCN}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>业务代码</td>
+                                        <td>{{scheduleModalData.sServiceName}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>QQ Appid</td>
+                                        <td>{{scheduleModalData.sAppId}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>微信 Appid</td>
+                                        <td>{{scheduleModalData.sWxAppId}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>游客 Appid</td>
+                                        <td>{{scheduleModalData.sVisitorAppId}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>手Q Appkey</td>
+                                        <td>{{scheduleModalData.sAppKey}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>首个活动actstyle</td>
+                                        <td>{{scheduleModalData.iActClassTypeId}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>首个活动测试环境infoid</td>
+                                        <td>{{scheduleModalData.iTestActivityId}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>首个活动正式环境infoid</td>
+                                        <td>{{scheduleModalData.iProductActivityId}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>是否接入新服功能</td>
+                                        <td>{{scheduleModalData.iIsNewPartition == 1 ? '是' : '否'}}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                                <p class='small text-gray'>
+                                    注：确认开发人员与时间后，将触发系统提示邮件
+                                </p>
+                            </div>
+
+
+                            <div class='form-horizontal ml-2 mt-2'>
+                                <div class='form-group '>
+                                    <label >分配对接开发：
+                                    </label>
+                                    <input type="text" class='width-50' id="sDeveloperRtxSelect">
+                                </div>
+                                <div class='form-group '>
+                                    <label>预计开发时间：
+                                    </label>
+                                    <input type="text" class='width-50' id="dateRangeSchedule">
+                                </div>
+                            </div>
+                        </div>
+                        <div class='modal-footer p-1'>
+                            <button type="button" class="btn btn-primary pull-right mb-10" @click="commitSchedule">确定</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- 开发进度管理面板-->
+            <div class="modal fade" id="manageModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">{{ manageModalData.item === 'sdk' ? 'SDK开发排期' :'后台开发排期' }}</h4>
+                        </div>
+                        <div class="modal-body">
+                            <ul class="nav nav-tabs">
+                                <li role="presentation" :class="{active: manageModalData.item === 'sdk'}" @click="showManageModal('sdk')">
+                                    <a href="#">SDK开发排期</a>
+                                </li>
+                                <li role="presentation" :class="{active: manageModalData.item === 'backend'}" @click="showManageModal('backend')">
+                                    <a href="#">后台开发排期</a>
+                                </li>
+                            </ul>
+
+                            <br>
+                            <p class='small text-gray'>
+                                注意：SDK开发排期与后台开发排期配置好后需要分别点击确定保存!
+                            </p>
+                            <p class='small text-gray'>
+                                请确认以下工作项已完成，并勾选已完成工作内容，可部分选择
+                            </p>
+
+                            <div v-show='manageModalData.item == "sdk"'>
+                                <template v-if="manageModalData.sdk">
+                                    <div class="checkbox mt-2" v-for="(item, idx) in manageModalData.sdk.sTaskDetail" :key="idx">
+                                        <label> <input type="checkbox" :checked="item.time != ''" @click="checkSdkDetail(item)"> {{item.label}} </label>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div v-show='manageModalData.item == "backend"'>
+                                <template v-if="manageModalData.backend">
+                                    <div class="form-group" v-for="(item, key, idx) in manageModalData.backend.sTaskDetail">
+                                        <template v-if="['testReport','alarmStrategyExcel','activityScreenshot'].indexOf(key) >= 0">
+                                            <label class='f-weight-lighter'>* {{item.label}}</label>
+                                            <div class='d-flex'>
+                                                <button class='bg-sky custom-btn w-25' @click="showFileSelectPanel(key)">选择文件</button>
+                                                <input class="input-sm w-50 ml-1 " readonly :value="showShortName(item.value)" type="text">
+                                                <input type="file" multiple style="position:absolute;width:0;height:0;" @change="multiFileUpload($event, item)" :ref="key">
+                                            </div>
+                                        </template>
+                                        <template v-else>
+                                            <label class='f-weight-lighter'>* {{item.label}}</label>
+                                            <input type="text" class='form-control' v-model="item.value">
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <p class='small text-gray'>
+                                    注：截取目标channelid, actstyle下的所有活动，正式/测试环境各一张
+                                </p>
+                            </div>
+                        </div>
+                        <div class='modal-footer p-1'>
+                            <button type="button" class="btn btn-primary pull-right mb-10" @click="commitTaskDetail(manageModalData)">确定</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 排期视图表组件 -->
+        <template id='scheduleTable'>
+            <div>
+                <table class="table table-bordered text-center">
+                    <thead >
+                    <tr class='bg-primary'>
+                        <th v-for="(item,idx) in xAxis" :colspan="item.colspan" class='text-center text-white bg-primary'>{{item.label}}</th>
+                    </tr>
+                    <tr class='bg-sky'>
+                        <th class="text-center">开发人员</th>
+                        <th v-for="(x,idx) in xDateLines" :key="idx" style="padding: 4px;">{{ x < 10 ? '0'+x : x}}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="(item, idy) in scheduleInfoList">
+                        <td>{{item.developer}}</td>
+                        <template v-if="item.startIdx > 0">
+                            <template v-for="(x, idx) in xDateLines">
+                                <td  v-if="(idx+1) == item.startIdx" :colspan="item.colspan" :style='getBgColor(x, "work")' :key="`${idy}-${idx}`">{{item.service}}</td>
+                                <td  v-else-if="(idx+1) < item.startIdx" :style='getBgColor(x, "idle")' :key="`${idy}-${idx}`"></td>
+                                <td  v-else-if="(idx+1) >= (item.startIdx + item.colspan)"  :style='getBgColor(x, "idle")' :key="`${idy}-${idx}`"></td>
+                            </template>
+                        </template>
+                        <template v-else>
+                            <td v-for="(x, idx) in xDateLines" :style='getBgColor(x, "idle")'> </td>
+                        </template>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+
+    {/literal}
+
+{/block}
