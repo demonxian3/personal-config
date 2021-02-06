@@ -1,0 +1,16 @@
+soft wraps = Ctrl + Alt + ,
+Extend Selection = Alt + W
+Add Selection = Ctrl + D
+Toggle Presentation mode = Ctrl + Alt + Enter
+Toggle Distraction Free = Alt + Shift + Enter
+Toggle Full Screen mode = Alt + Enter
+Navigation -> File = Alt + F
+Navigation -> Back = Alt + Q
+Navigation -> Forward = Alt + E
+Window -> Editor -> Tabs -> Close = Ctrl + W
+Window -> Editor -> Tabs -> Split Vertical = Ctrl + Shift + \
+Expand all = Ctrl + Shift + =
+Collapse all = Ctrl + Shift + -
+Edit Maximized = Alt + Enter
+Join lines = Alt + J
+Redo = Ctrl + Y
